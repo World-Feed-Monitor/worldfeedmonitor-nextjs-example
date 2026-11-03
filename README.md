@@ -1,6 +1,6 @@
 # World Feed Monitor · Next.js example
 
-A **Global News Dashboard** built on the [World Feed Monitor](https://worldfeedmonitor.com) REST API with Next.js (App Router) and TypeScript.
+A **Global News Dashboard** built on the [World Feed Monitor](https://worldfeedmonitor.com/?utm_source=github) REST API with Next.js (App Router) and TypeScript.
 
 Search news from every country and language by keyword, country, language and topic, and read it as article cards linking to the original publishers. It runs on a Free account, and needs no database and no backend of its own.
 
@@ -21,11 +21,11 @@ The whole integration is one file, [`lib/wfm.ts`](lib/wfm.ts) (about 250 lines).
 - Node.js 20.9 or later
 - A World Feed Monitor account. The Free plan is enough and needs no card.
 
-Want to see the data first? The [API Playground](https://worldfeedmonitor.com/playground) runs the same search with no account.
+Want to see the data first? The [API Playground](https://worldfeedmonitor.com/playground?utm_source=github) runs the same search with no account.
 
 ## 1. Create a free account
 
-Sign up at [worldfeedmonitor.com/register](https://worldfeedmonitor.com/register) with an email address, GitHub or Google. Every account starts on the Free plan. Confirm your email address: the API answers only once it is confirmed.
+Sign up at [worldfeedmonitor.com/register](https://worldfeedmonitor.com/register?utm_source=github) with an email address, GitHub or Google. Every account starts on the Free plan. Confirm your email address: the API answers only once it is confirmed.
 
 ## 2. Create API credentials
 
@@ -154,10 +154,10 @@ npm run typecheck   # TypeScript
 
 ## Links
 
-- [API Playground](https://worldfeedmonitor.com/playground): try searches without an account
-- [API reference](https://worldfeedmonitor.com/docs)
+- [API Playground](https://worldfeedmonitor.com/playground?utm_source=github): try searches without an account
+- [API reference](https://worldfeedmonitor.com/docs?utm_source=github)
 - [OpenAPI document](https://worldfeedmonitor.com/openapi.json)
-- [MCP server](https://worldfeedmonitor.com/#mcp): the same data for AI agents
+- [MCP server](https://worldfeedmonitor.com/?utm_source=github#mcp): the same data for AI agents
 
 ## License
 
