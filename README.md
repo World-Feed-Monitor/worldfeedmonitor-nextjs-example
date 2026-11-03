@@ -4,8 +4,6 @@ A **Global News Dashboard** built on the [World Feed Monitor](https://worldfeedm
 
 Search news from every country and language by keyword, country, language and topic, and read it as article cards linking to the original publishers. It runs on a Free account, and needs no database and no backend of its own.
 
-![The Global News Dashboard showing articles filtered by country and topic](docs/dashboard.png)
-
 ## What it demonstrates
 
 - Calling `GET /v1/feeds/search` with HTTP Basic authentication, **from the server only**: the API secret never reaches the browser.
