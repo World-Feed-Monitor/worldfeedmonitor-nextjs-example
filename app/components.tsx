@@ -1,61 +1,95 @@
 import Form from "next/form";
 import Link from "next/link";
-import type { Article, Country, Filters, Language, Topic, WfmError } from "@/lib/wfm";
+import type { Article, Country, Filters, Language, SearchResponse, Topic, WfmError } from "@/lib/wfm";
+
+export type Options = { countries: Country[]; languages: Language[]; topics: Topic[] };
 
 // next/form submits as a GET to this page, so the filters live in the URL:
 // a search can be bookmarked or shared, and the browser's back button works.
-export function SearchForm({
-  filters,
-  countries,
-  languages,
-  topics,
-}: {
-  filters: Filters;
-  countries: Country[];
-  languages: Language[];
-  topics: Topic[];
-}) {
+export function SearchForm({ filters, countries, languages, topics }: { filters: Filters } & Options) {
+  const filtered = Boolean(filters.keywords || filters.country || filters.language || filters.topic);
+
   return (
-    <Form action="/" className="search">
-      <label className="field wide">
-        <span>Keywords</span>
-        <input name="keywords" type="search" maxLength={255} defaultValue={filters.keywords} placeholder="e.g. elections, energy prices" />
-      </label>
-      <label className="field">
-        <span>Country</span>
-        <select name="country" defaultValue={filters.country ?? ""}>
-          <option value="">Every country</option>
+    <Form action="/" className="search" role="search">
+      <div className="query">
+        <label htmlFor="keywords" className="visually-hidden">
+          Keywords
+        </label>
+        <input
+          id="keywords"
+          name="keywords"
+          type="search"
+          maxLength={255}
+          defaultValue={filters.keywords}
+          placeholder="Search the world's news"
+        />
+        <button type="submit">Search</button>
+      </div>
+
+      <div className="filters">
+        <Select name="country" label="Country" value={filters.country} any="Every country">
           {countries.map((country) => (
             <option key={country.iso_3} value={country.iso_3}>
               {country.name}
             </option>
           ))}
-        </select>
-      </label>
-      <label className="field">
-        <span>Language</span>
-        <select name="language" defaultValue={filters.language ?? ""}>
-          <option value="">Every language</option>
+        </Select>
+        <Select name="language" label="Language" value={filters.language} any="Every language">
           {languages.map((language) => (
             <option key={language.code} value={language.code}>
               {language.name}
             </option>
           ))}
-        </select>
-      </label>
-      <label className="field">
-        <span>Topic</span>
-        <select name="topic" defaultValue={filters.topic ?? ""}>
-          <option value="">Every topic</option>
+        </Select>
+        <Select name="topic" label="Topic" value={filters.topic} any="Every topic">
           {topics.map((topic) => (
             <option key={topic.key} value={topic.key}>
               {topic.name}
             </option>
           ))}
-        </select>
-      </label>
-      <button type="submit">Search</button>
+        </Select>
+        {filtered && (
+          <Link href="/" className="clear">
+            Clear filters
+          </Link>
+        )}
+      </div>
     </Form>
+  );
+}
+
+function Select({ name, label, value, any, children }: { name: string; label: string; value?: string; any: string; children: React.ReactNode }) {
+  return (
+    <label>
+      <span className="visually-hidden">{label}</span>
+      <select name={name} defaultValue={value ?? ""} className={value ? "is-set" : undefined}>
+        <option value="">{any}</option>
+        {children}
+      </select>
+    </label>
+  );
+}
+
+/** What is on screen, as a sentence: "297 articles from Japan about Politics". */
+export function Summary({ meta, filters, options }: { meta: SearchResponse["meta"]; filters: Filters; options: Options }) {
+  const country = options.countries.find((c) => c.iso_3 === filters.country || c.iso_2 === filters.country)?.name ?? filters.country;
+  const language = options.languages.find((l) => l.code === filters.language)?.name ?? filters.language;
+  const topic = options.topics.find((t) => t.key === filters.topic)?.name ?? filters.topic;
+  const count = meta.total_items;
+
+  return (
+    <div className="summary">
+      <p>
+        <strong>
+          {count.toLocaleString("en")} {count === 1 ? "article" : "articles"}
+        </strong>
+        {filters.keywords && <> matching “{filters.keywords}”</>}
+        {country ? <> from {country}</> : <> from every country</>}
+        {language && <> in {language}</>}
+        {topic && <> about {topic}</>}
+      </p>
+      <small>Published in the last day</small>
+    </div>
   );
 }
 
@@ -64,46 +98,69 @@ export function ArticleList({ articles }: { articles: Article[] }) {
     <ol className="articles">
       {articles.map((article) => (
         <li key={article.uuid} className="article">
-          {article.image && (
-            // A plain <img>: articles come from thousands of publisher hosts,
-            // which next/image would need listed one by one.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={article.image} alt="" loading="lazy" />
-          )}
-          <div>
+          <Dateline article={article} />
+          <div className="story">
             <h2>
               <a href={article.url} target="_blank" rel="noopener noreferrer">
                 {article.title}
               </a>
             </h2>
-            <p className="meta">
-              <span>{article.source.name}</span>
-              {article.published_at && <span>{published(article)}</span>}
-              <span>{article.country.name}</span>
+            <p className="byline">
+              <b>{article.source.name}</b>
               <span>{article.language.name}</span>
+              {article.author && <span>By {article.author}</span>}
             </p>
             {article.content && <p className="excerpt">{article.content}</p>}
             {article.macro_categories.length > 0 && (
-              <p className="topics">
+              <ul className="topics" aria-label="Topics">
                 {article.macro_categories.map((topic) => (
-                  <span key={topic.key}>{topic.name}</span>
+                  <li key={topic.key}>{topic.name}</li>
                 ))}
-              </p>
+              </ul>
             )}
           </div>
+          {article.image && (
+            // A plain <img>: articles come from thousands of publisher hosts,
+            // which next/image would need listed one by one.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="thumb" src={article.image} alt="" loading="lazy" />
+          )}
         </li>
       ))}
     </ol>
   );
 }
 
-// The API gives the publisher's local time and its timezone, not UTC.
-function published(article: Article): string {
-  const time = article.published_at!.slice(0, 16);
-  return article.published_timezone ? `${time} (${article.published_timezone})` : time;
+// Where and when, as a wire service files it. The API gives the publisher's
+// local time with its timezone, so that is what is shown: 09:12 in Tokyo.
+function Dateline({ article }: { article: Article }) {
+  const local = article.published_at ? parseLocal(article.published_at) : null;
+
+  return (
+    <div className="dateline">
+      <abbr title={article.country.name}>{article.country.iso_2}</abbr>
+      {local && <time dateTime={article.published_at!.replace(" ", "T")}>{local.time}</time>}
+      {local && <span>{local.date}</span>}
+      {article.published_timezone && <span>{place(article.published_timezone)}</span>}
+    </div>
+  );
 }
 
-export function Pagination({ filters, hasPrevious, hasNext }: { filters: Filters; hasPrevious: boolean; hasNext: boolean }) {
+function parseLocal(value: string): { time: string; date: string } {
+  const [day, time] = value.split(" ");
+  const [year, month, date] = day.split("-").map(Number);
+  const label = new Date(Date.UTC(year, month - 1, date)).toLocaleDateString("en", { day: "numeric", month: "short", timeZone: "UTC" });
+
+  return { time: time.slice(0, 5), date: label };
+}
+
+/** "Asia/Tokyo" reads as "Tokyo"; a bare offset such as "+11:00" as "UTC+11:00". */
+export function place(timezone: string): string {
+  if (/^[+-]\d{2}:\d{2}$/.test(timezone)) return `UTC${timezone}`;
+  return timezone.split("/").pop()!.replaceAll("_", " ");
+}
+
+export function Pagination({ filters, meta }: { filters: Filters; meta: SearchResponse["meta"] }) {
   const page = filters.page ?? 1;
   const href = (target: number) => {
     const params = new URLSearchParams();
@@ -114,11 +171,27 @@ export function Pagination({ filters, hasPrevious, hasNext }: { filters: Filters
     return query ? `/?${query}` : "/";
   };
 
+  if (!meta.has_previous && !meta.has_next) return null;
+
   return (
     <nav className="pagination" aria-label="Pages">
-      {hasPrevious ? <Link href={href(page - 1)}>← Previous</Link> : <span />}
-      {hasNext && <Link href={href(page + 1)}>Next →</Link>}
+      {meta.has_previous ? <Link href={href(page - 1)}>Previous page</Link> : <i />}
+      <span>
+        Page {meta.current_page} of {meta.total_pages}
+      </span>
+      {meta.has_next ? <Link href={href(page + 1)}>Next page</Link> : <i />}
     </nav>
+  );
+}
+
+export function Empty() {
+  return (
+    <section className="empty">
+      <h2>No articles match this search</h2>
+      <p>
+        Searches cover the last day. Try fewer filters or different keywords, or <Link href="/">clear the filters</Link>.
+      </p>
+    </section>
   );
 }
 
@@ -126,16 +199,24 @@ export function ResultsSkeleton() {
   return (
     <div className="skeleton" role="status" aria-live="polite">
       <span className="visually-hidden">Loading articles…</span>
-      {Array.from({ length: 4 }, (_, i) => (
+      {Array.from({ length: 5 }, (_, i) => (
         <div key={i} />
       ))}
     </div>
   );
 }
 
+// A daily allowance resets in hours, a minute's in seconds: say it the way a person would.
+export function duration(seconds: number): string {
+  const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? "" : "s"}`;
+  if (seconds < 120) return plural(seconds, "second");
+  if (seconds < 7200) return plural(Math.round(seconds / 60), "minute");
+  return plural(Math.round(seconds / 3600), "hour");
+}
+
 const HELP: Record<WfmError["kind"], { title: string; hint?: React.ReactNode }> = {
   "missing-credentials": {
-    title: "Add your API credentials",
+    title: "Add your API credentials to start",
     hint: (
       <ol>
         <li>
@@ -174,14 +255,6 @@ const HELP: Record<WfmError["kind"], { title: string; hint?: React.ReactNode }> 
   },
   unavailable: { title: "The API could not be reached", hint: <p>Check your connection and try again.</p> },
 };
-
-// A daily allowance resets in hours, a minute's in seconds: say it the way a person would.
-export function duration(seconds: number): string {
-  const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? "" : "s"}`;
-  if (seconds < 120) return plural(seconds, "second");
-  if (seconds < 7200) return plural(Math.round(seconds / 60), "minute");
-  return plural(Math.round(seconds / 3600), "hour");
-}
 
 export function ErrorPanel({ error }: { error: WfmError }) {
   const help = HELP[error.kind];

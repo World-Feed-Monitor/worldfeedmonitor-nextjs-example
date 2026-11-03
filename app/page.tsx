@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { listFilterOptions, parseFilters, searchArticles, WfmError, type Filters } from "@/lib/wfm";
-import { ArticleList, ErrorPanel, Pagination, ResultsSkeleton, SearchForm } from "./components";
+import { ArticleList, Empty, ErrorPanel, Pagination, ResultsSkeleton, SearchForm, Summary, type Options } from "./components";
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -24,34 +24,23 @@ export default async function Page({ searchParams }: Props) {
       {ignored.length > 0 && <p className="notice">Ignored a value that is not valid for: {ignored.join(", ")}.</p>}
       {/* Keyed by the search, so a new search shows the skeleton while it loads. */}
       <Suspense key={JSON.stringify(filters)} fallback={<ResultsSkeleton />}>
-        <Results filters={filters} />
+        <Results filters={filters} options={options} />
       </Suspense>
     </Shell>
   );
 }
 
-async function Results({ filters }: { filters: Filters }) {
+async function Results({ filters, options }: { filters: Filters; options: Options }) {
   const result = await attempt(() => searchArticles(filters));
 
   if (result instanceof WfmError) return <ErrorPanel error={result} />;
-
-  const { meta, data } = result;
-
-  if (data.length === 0) {
-    return (
-      <p className="empty">
-        No articles matched. Searches cover the last day by default: try fewer filters or other keywords.
-      </p>
-    );
-  }
+  if (result.data.length === 0) return <Empty />;
 
   return (
     <>
-      <p className="summary">
-        {meta.total_items.toLocaleString("en")} articles · page {meta.current_page} of {meta.total_pages}
-      </p>
-      <ArticleList articles={data} />
-      <Pagination filters={filters} hasPrevious={meta.has_previous} hasNext={meta.has_next} />
+      <Summary meta={result.meta} filters={filters} options={options} />
+      <ArticleList articles={result.data} />
+      <Pagination filters={filters} meta={result.meta} />
     </>
   );
 }
@@ -69,11 +58,10 @@ async function attempt<T>(call: () => Promise<T>): Promise<T | WfmError> {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main>
-      <header className="header">
+      <header className="masthead">
         <h1>Global News Dashboard</h1>
         <p>
-          Articles from every country and language, through the{" "}
-          <a href="https://worldfeedmonitor.com">World Feed Monitor</a> REST API.
+          An example built on the <a href="https://worldfeedmonitor.com/docs">World Feed Monitor API</a>
         </p>
       </header>
       {children}
