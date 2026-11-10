@@ -48,18 +48,18 @@ describe("searchUrl", () => {
   it("uses the API's parameter names", () => {
     const url = searchUrl(credentials.baseUrl, { keywords: "climate", country: "BRA", language: "pt", topic: "business", page: 3 });
 
-    expect(url.origin + url.pathname).toBe("https://api.example.test/v1/feeds/search");
+    expect(url.origin + url.pathname).toBe("https://api.example.test/v1/articles/search");
     expect(Object.fromEntries(url.searchParams)).toEqual({
       keywords: "climate",
       country: "BRA",
       language: "pt",
-      macro_category: "business",
+      topic: "business",
       page: "3",
     });
   });
 
   it("sends no parameters for a worldwide first page", () => {
-    expect(searchUrl(`${credentials.baseUrl}/`, { page: 1 }).toString()).toBe("https://api.example.test/v1/feeds/search");
+    expect(searchUrl(`${credentials.baseUrl}/`, { page: 1 }).toString()).toBe("https://api.example.test/v1/articles/search");
   });
 });
 
@@ -91,7 +91,7 @@ describe("requests", () => {
 
     expect(result.data).toEqual([{ uuid: "a" }]);
     const [url, init] = fetch.mock.calls[0];
-    expect(String(url)).toBe("https://api.example.test/v1/feeds/search?country=JPN");
+    expect(String(url)).toBe("https://api.example.test/v1/articles/search?country=JPN");
     expect(init.headers.Authorization).toBe(authorizationHeader("test-key", "test-secret"));
     expect(init.next).toEqual({ revalidate: 60 });
   });
@@ -105,7 +105,7 @@ describe("requests", () => {
     expect(fetch.mock.calls.map(([url]) => new URL(String(url)).pathname).sort()).toEqual([
       "/v1/metadata/countries",
       "/v1/metadata/languages",
-      "/v1/metadata/macro-categories",
+      "/v1/metadata/topics",
     ]);
     expect(fetch.mock.calls.every(([, init]) => init.next.revalidate === 86_400)).toBe(true);
   });

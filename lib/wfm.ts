@@ -22,10 +22,10 @@ export type Article = {
   image: string | null;
   published_at: string | null; // "YYYY-MM-DD HH:MM:SS", in published_timezone
   published_timezone: string | null;
-  source: { name: string; url: string };
+  publisher: { name: string; url: string };
   country: { name: string; iso_2: string; iso_3: string };
   language: { name: string; code: string };
-  macro_categories: Named[];
+  topics: Named[];
 };
 
 export type SearchResponse = {
@@ -51,7 +51,7 @@ export type Filters = {
   keywords?: string;
   country?: string; // ISO 3166-1 alpha-2 or alpha-3
   language?: string; // ISO 639-1
-  topic?: string; // macro category key, e.g. "politics"
+  topic?: string; // topic key, e.g. "politics"
   page?: number;
 };
 
@@ -107,12 +107,12 @@ export function parseFilters(params: SearchParams): { filters: Filters; ignored:
 
 /** The search request, with the API's own parameter names. */
 export function searchUrl(baseUrl: string, filters: Filters): URL {
-  const url = new URL(`${baseUrl.replace(/\/+$/, "")}/feeds/search`);
+  const url = new URL(`${baseUrl.replace(/\/+$/, "")}/articles/search`);
 
   if (filters.keywords) url.searchParams.set("keywords", filters.keywords);
   if (filters.country) url.searchParams.set("country", filters.country);
   if (filters.language) url.searchParams.set("language", filters.language);
-  if (filters.topic) url.searchParams.set("macro_category", filters.topic);
+  if (filters.topic) url.searchParams.set("topic", filters.topic);
   if (filters.page && filters.page > 1) url.searchParams.set("page", String(filters.page));
 
   return url;
@@ -237,7 +237,7 @@ export async function listFilterOptions(credentials = readCredentials()): Promis
   const [countries, languages, topics] = await Promise.all([
     list<Country>("/metadata/countries"),
     list<Language>("/metadata/languages"),
-    list<Topic>("/metadata/macro-categories"),
+    list<Topic>("/metadata/topics"),
   ]);
 
   return { countries, languages, topics };

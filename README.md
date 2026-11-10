@@ -8,7 +8,7 @@ Search news from every country and language by keyword, country, language and to
 
 ## What it demonstrates
 
-- Calling `GET /v1/feeds/search` with HTTP Basic authentication, **from the server only**: the API secret never reaches the browser.
+- Calling `GET /v1/articles/search` with HTTP Basic authentication, **from the server only**: the API secret never reaches the browser.
 - Filling the country, language and topic filters from the metadata endpoints.
 - Validating filters before a request is spent on them.
 - Handling every documented error: 401, 403, 422 and 429.
@@ -81,24 +81,24 @@ headers: {
 The curl equivalent:
 
 ```bash
-curl -u "YOUR_API_KEY:YOUR_API_SECRET" "https://api.worldfeedmonitor.com/v1/feeds/search?country=JPN"
+curl -u "YOUR_API_KEY:YOUR_API_SECRET" "https://api.worldfeedmonitor.com/v1/articles/search?country=JPN"
 ```
 
-**Search** is one request to `/v1/feeds/search`:
+**Search** is one request to `/v1/articles/search`:
 
 | Dashboard filter | API parameter | Values |
 | --- | --- | --- |
 | Keywords | `keywords` | Free text, up to 255 characters |
 | Country | `country` | ISO 3166-1 alpha-2 or alpha-3, e.g. `JP` or `JPN` |
 | Language | `language` | ISO 639-1, e.g. `ja` |
-| Topic | `macro_category` | A topic key, e.g. `politics` |
+| Topic | `topic` | A topic key, e.g. `politics` |
 | Page | `page` | 1-based, 25 articles per page |
 
 With no dates, a search covers the last day. The response is `{ meta, data }`:
 - `data` holds the articles.
 - `meta` holds `total_items`, `current_page`, `has_next`, and `applied_filters`, which echoes how each filter was understood.
 
-**Filter lists** come from `/v1/metadata/countries`, `/v1/metadata/languages` and `/v1/metadata/macro-categories`.
+**Filter lists** come from `/v1/metadata/countries`, `/v1/metadata/languages` and `/v1/metadata/topics`.
 
 **Data flow.** The page is a Server Component:
 1. It reads the filters from the URL and validates them.

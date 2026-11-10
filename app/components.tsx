@@ -106,14 +106,14 @@ export function ArticleList({ articles }: { articles: Article[] }) {
               </a>
             </h2>
             <p className="byline">
-              <b>{article.source.name}</b>
+              <b>{article.publisher.name}</b>
               <span>{article.language.name}</span>
               {article.author && <span>By {article.author}</span>}
             </p>
             {article.content && <p className="excerpt">{article.content}</p>}
-            {article.macro_categories.length > 0 && (
+            {article.topics.length > 0 && (
               <ul className="topics" aria-label="Topics">
-                {article.macro_categories.map((topic) => (
+                {article.topics.map((topic) => (
                   <li key={topic.key}>{topic.name}</li>
                 ))}
               </ul>
